@@ -1,0 +1,303 @@
+import numpy as np
+import pandas as pd
+
+tbl = pd.read_csv('MS2137_molino.txt',delimiter = r"\s\s", skiprows=133) 
+
+data1, data2 = tbl[tbl.columns[51]], tbl[tbl.columns[39]] 
+
+arr = np.array(tbl)
+#print arr
+arr1 = np.array(data1)#red filter
+#print arr1
+
+arr2 =  np.array(data2)# blue filter
+
+
+
+arr3 = arr2-arr1
+#---------------------------------------------------
+col = np.column_stack((arr1,arr3))
+#print(col)
+plt.scatter(arr1,arr3, s = 5)#plots unreduced red sequence
+
+
+
+x = [] #new x compontent FOR THE LUMINOSITY FUNCTION
+y = []#new y compontent FOR THE LUMINOSITY FUNCTION
+for i in range(len(col)): #loop that limits the plot
+ if col[i,1]<= (-0.12*col[i,0] +5 ) and col[i,1]>= (-0.12*col[i,0] + 4.4) and col[i,0]<30:
+  
+  x.append(col[i,0])
+  y.append(col[i,1])
+ else:
+  pass
+    
+plt.scatter(x,y, s=2) #reduced plot
+
+#--------------------------------------------------
+
+
+#now for the data reduction
+#field
+
+tbl2 = np.loadtxt("F:\Phython stuff\datared1.txt",) 
+
+arrdr = np.array(tbl2)
+
+#plt.scatter(tbl2[::,3],tbl2[::,4])
+
+data3 = tbl2[::,16]#mag(i)
+
+arrdr1 = np.array(data3)
+
+data4 = tbl2[::,10]#mag(B)
+
+arrdr2 =  np.array(data4) 
+#print(arrdr2)
+
+arrdr3 = arrdr2-arrdr1
+
+col2 = np.column_stack((arrdr1,arrdr3))
+
+x_dr = [] #new x compontent FOR THE LUMINOSITY FUNCTION
+y_dr = [] #new y compontent FOR THE LUMINOSITY FUNCTION
+for i in range(len(col2)): #loop that limits the plot
+ if col2[i,1]<= (-0.12*col2[i,0] +5 ) and col2[i,1]>= (-0.12*col2[i,0] + 4.4) and col2[i,0]<30: #MS2137
+    
+  x_dr.append(col2[i,0])
+  y_dr.append(col2[i,1])
+ else:
+  pass
+
+
+#-------------
+
+#attempt on the circle stuff
+
+
+#cluster
+
+
+  
+dataX = tbl["RA"]
+arrX = np.array(dataX)
+dataY = tbl["Dec"]
+arrY =  np.array(dataY)
+#plt.scatter(arrX,arrY,s=5)
+BCGX = tbl["BCG_pos_RA"]
+BCGY = tbl["BCG_pos_Dec"]
+
+AvgRA = float(np.average(arrX))
+AvgDec = float(np.average(arrY))
+#print(AvgRA)
+#print(AvgDec)
+#plt.scatter(AvgRA,AvgDec)
+ColAvg = np.column_stack((arrX,arrY,arr1,arr3)) #represents ra,dec, Mag1, Mag2_mag1
+RA_within_circle = []
+Dec_within_circle = []
+Mag2c = []
+Mag1_Mag2c = []
+
+
+
+for i in range(len(ColAvg)): #loop that removes any point a certain distance from the average
+ if ColAvg[i,3]<= (-0.12*ColAvg[i,2] +5 ) and ColAvg[i,3]>= (-0.12*ColAvg[i,2] + 4.4) and ColAvg[i,2]<30 and (np.square(ColAvg[i,0] - AvgRA) + np.square(ColAvg[i,1] - AvgDec)) <= np.square(radius): #normal
+  RA_within_circle.append(ColAvg[i,0])
+  Dec_within_circle.append(ColAvg[i,1])
+  Mag2c.append(ColAvg[i,2])
+  Mag1_Mag2c.append(ColAvg[i,3])
+ else:
+  pass
+  
+  
+
+#now time to do the same for the field
+
+AvgRAf = float(np.average(tbl2[::,3]))
+AvgDecf = float(np.average(tbl2[::,4]))
+##print(AvgRAf)
+##print(AvgDecf)
+##plt.scatter(AvgRA,AvgDec)
+ColAvgf = np.column_stack((tbl2[::,3],tbl2[::,4],arrdr1,arrdr3)) # [RA,Dec,X for luminosity function, Y for luminosity function]
+RA_within_circlef = []
+Dec_within_circlef = []
+Mag2f = []
+Mag1_Mag2f = []
+
+
+for i in range(len(ColAvgf)): #loop that removes any point a certain distance from the average
+ if ColAvgf[i,3]<= (-0.12*ColAvgf[i,2] +5 ) and ColAvgf[i,3]>= (-0.12*ColAvgf[i,2] + 4.4) and ColAvgf[i,2]<30 and (np.square(ColAvgf[i,0] - AvgRAf) + np.square(ColAvgf[i,1] - AvgDecf)) <= np.square(radius) :
+  RA_within_circlef.append(ColAvgf[i,0])
+  Dec_within_circlef.append(ColAvgf[i,1])
+  Mag2f.append(ColAvgf[i,2])
+  Mag1_Mag2f.append(ColAvgf[i,3])
+ else:
+  pass
+  
+#---------------------------
+
+#now time to deal with the depth
+
+Depth_Mag2c = []
+Depth_Mag1_Mag2c = []
+
+for i in range(len(ColAvg)): #for MS 2137.3-2353
+ if ColAvg[i,3]< (-0.12*ColAvg[i,2] + 4.4) and ColAvg[i,2]<30:
+  Depth_Mag2c.append(ColAvg[i,2])
+  Depth_Mag1_Mag2c.append(ColAvg[i,3])
+ else:
+  pass
+
+
+#plt.scatter(Depth_Mag2c,Depth_Mag1_Mag2c)
+
+#---------------------
+
+#Absolute magnitude conversions
+  
+for i in range(len(Mag2c)):
+ Mag2c[i] = Mag2c[i] - 5*np.log10(d) +5 - k_cor + Colour_correction
+ 
+for i in range(len(Mag2f)):
+ Mag2f[i] = Mag2f[i] - 5*np.log10(d) +5 - k_cor + Colour_correction
+ 
+for i in range(len(Depth_Mag2c)):
+ Depth_Mag2c[i] = Depth_Mag2c[i] - 5*np.log10(d) +5 - k_cor + Colour_correction
+ 
+#-------------------
+
+Mag2ca = []
+Mag2cb = []
+cut_point = float(-19.0)
+depth_limit = float(-17) #check this
+
+for i in range(len(Mag2c)):
+ if Mag2c[i]<cut_point:
+  Mag2ca.append(Mag2c[i])
+ if Mag2c[i] > cut_point and Mag2c[i]<depth_limit:
+  Mag2cb.append(Mag2c[i])
+ else:
+  pass
+  
+  
+#------------------------------#histogram stuff
+#
+#
+num_bins = 30 #sets parameters for the histograms
+range_upper = -10
+range_lower = -25
+
+##
+num_binsf = float(num_bins) # turns the integers into float numbers so calculations can be made onthem
+range_upperf = float(range_upper)
+range_lowerf = float(range_lower)
+bin_width = ((range_upperf - range_lowerf) / num_binsf)
+#print(bin_width)
+##
+hist1, bin_edges1 = np.histogram(Mag2c,bins = num_bins, range = (range_lower ,range_upper)) #cluster data
+hist1a, bin_edges1 = np.histogram(Mag2ca,bins = num_bins, range = (range_lower ,range_upper )) #giants
+hist1b, bin_edges1 = np.histogram(Mag2cb,bins = num_bins, range = (range_lower ,range_upper )) #dwarfs
+#print(bin_edges1)
+#print(hist1a)
+#
+hist2, bin_edges1 = np.histogram(Mag2f,bins = num_bins, range = (range_lower ,range_upper )) # field data
+hist2a, bin_edges1 = np.histogram(Mag2f,bins = num_bins, range = (range_lower ,range_upper )) #giants
+hist2b, bin_edges1= np.histogram(Mag2f,bins = num_bins, range = (range_lower ,range_upper )) #dwarfs
+##print(hist2)
+#
+#
+hist3 = hist1-hist2 #corrected data, now need to deal with the negatives 
+hist3a = hist1a-hist2a
+hist3b = hist1b-hist2b
+##print(hist3)
+#
+histD, bin_edges1 = np.histogram(Depth_Mag2c,bins = num_bins, range = (range_lower + (0.5* bin_width),range_upper + (0.5*bin_width))) # for depth calculation
+####print(histd)
+
+histC = [] #data with the negatives removed
+histCa = [] #final giants
+histCb = [] #final dwarfs
+
+
+#----------------------------
+
+for i in range(len(hist3)): #loop that limits the plot
+ if hist3[i]>= 0:
+  histC.append(hist3[i])
+ else:
+  histC.append(0)
+ 
+#print(histC)
+  
+for i in range(len(hist3a)): 
+ if hist3a[i]>= 0:
+  histCa.append(hist3a[i])
+ else:
+  histCa.append(0)
+
+
+for i in range(len(hist3b)): #loop that limits the plot
+ if hist3b[i]>= 0:
+  histCb.append(hist3b[i])
+ else:
+  histCb.append(0)
+  
+#plt.bar(bin_edges1[:-1], histD, width = bin_width)
+#
+#plt.xlim(min(bin_edges1), max(bin_edges1))
+#plt.bar(bin_edges1[:-1], hist1, width = bin_width)
+#plt.bar(bin_edges1[:-1], hist2, width = bin_width)
+#plt.bar(bin_edges1[:-1], hist3, width = bin_width)
+#plt.bar(bin_edges1[:-1], histC, width = bin_width)
+plt.bar(bin_edges1[:-1], histCa, width = bin_width)
+plt.bar(bin_edges1[:-1], histCb, width = bin_width)
+##
+#plt.ylabel("Frequency ")
+#plt.xlabel("Absolute Magnitude")
+#plt.title('Depth histogram of Cluster shifted to absolute magnitude')
+#plt.title('Unreduced Cluster Data for CLJ1226')
+#plt.title('Reduced Cluster Data for RXJ1532')
+
+#plt.gca().invert_xaxis()
+
+#-----------------------------------------
+
+#dwarf to giant ratio bit
+
+giants = float(np.sum(histCa))
+#print(histCa)
+dwarfs = float(np.sum(histCb))
+#
+print(giants)
+print(dwarfs)
+
+d_to_g = float(dwarfs/giants)
+
+print(d_to_g)
+
+
+
+#-----------------------
+
+
+#quick plot of d to g v z:
+#dtog = [1.13636363636,1.22727272727,1.85185185185,0.733333333333,0.47619047619,1.39285714286,1.6,0.574468085106,0.871794871795,0.736842105263,0.966666666667,0.803921568627,0.741935483871,1.26315789474,0.826086956522,1.875,0.666666666667,0.885714285714]
+#dtog_top = [2.9166666666666,2.76923076923,3.8125,1.4769047619,0.55,2.19047,3.333333333,1.0555555555,1.4705882353,1.8695,1.4583333333,1.24390243902,1.454545454545454545,2.185185185185,2.23076923077,6.6666666,1.65882352941,1.64]
+#dtog_bot = [0.807692307692,0.53125,1.1388888888,0.529411764706,0.47619047619,0.6750,0.925925925926,0.450980392157,0.553191489362,0.5,0.685714285714,0.483870967742,0.588235294118,0.686274509804, 0.615384615385,1.875,0.590909090909,0.53488372093]
+#za = [0.313,0.345,0.348,0.352,0.352,0.391,0.39,0.44,0.45,0.451,0.494,0.544,0.545,0.548,0.57,0.584,0.686,0.89]
+#
+#line1 = plt.plot(za,dtog)
+#line2 = plt.plot(za,dtog_top)
+#line3 = plt.plot(za,dtog_bot)
+#plt.ylabel("Dwarf to Giant ratio")
+#plt.xlabel("Z")
+#plt.title('plot of dwarf to giant ratio against redshift')
+#plt.legend([line1,line2,line3], ['normal plot', 'upper limit', 'lower limit'])
+
+
+
+
+
+  
+  
+  
