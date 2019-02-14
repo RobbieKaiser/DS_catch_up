@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib as plt
 
 tbl = pd.read_csv('MS2137_molino.txt',delimiter = r"\s\s", skiprows=133) 
 
